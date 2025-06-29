@@ -5,17 +5,28 @@ const dotenv = require("dotenv");
 const http = require("http");
 const { Server } = require("socket.io");
 
-const authRoutes = require("./routes/auth");
-const scoreRoutes = require("./routes/scoreRoutes");
-const Message = require("./models/Message");
-
+// Load env variables
 dotenv.config();
 
+// Import Routes & Models
+const authRoutes = require("./routes/authRoutes");
+const scoreRoutes = require("./routes/scoreRoutes");
+const contactRoute = require("./routes/contactRoute");
+const Message = require("./models/Message");
+
+// Create Express app and HTTP server
 const app = express();
 const server = http.createServer(app);
+
+// Configure Socket.IO
 const io = new Server(server, {
   cors: {
-    origin: "*", // For development; restrict in production
+    origin: [
+      "http://localhost:3000",
+      "https://surakshabuddywebapp.vercel.app", // ✅ no trailing slash
+    ],
+    methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 
@@ -23,47 +34,49 @@ const io = new Server(server, {
 app.use(cors({
   origin: [
     "http://localhost:3000",
-    "https://surakshabuddywebapp.vercel.app/"  // ✅ your actual Vercel frontend URL
+    "https://surakshabuddywebapp.vercel.app",
   ],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true,
 }));
 app.use(express.json());
 
-// Routes
+// API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/score", scoreRoutes);
+app.use("/api", contactRoute);
+
+// Default Route
+app.get("/", (req, res) => {
+  res.send("✅ Digital Detox Backend is Live");
+});
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
-  .then(() => console.log("✅ Connected to MongoDB"))
-  .catch((err) => console.error("❌ MongoDB connection error:", err));
+.then(() => console.log("✅ MongoDB Connected"))
+.catch((err) => console.error("❌ MongoDB Error:", err.message));
 
-// ✅ Root Route
-app.get("/", (req, res) => {
-  res.send("✅ Digital Detox Backend is Live");
-});
-
-// Socket.IO Chat Logic
+// Socket.IO Real-Time Chat Logic
 io.on("connection", (socket) => {
   console.log("🔌 New client connected");
 
-  // Join a private room
+  // Join room
   socket.on("joinRoom", (room) => {
     if (!room) return;
     socket.join(room);
+
     Message.find({ room })
       .sort({ timestamp: 1 })
       .then((messages) => {
         socket.emit("chatHistory", messages);
       })
-      .catch((err) => console.error("❌ Fetch messages error:", err));
+      .catch((err) => console.error("❌ Fetch chat history error:", err));
   });
 
-  // Handle sending messages
+  // Receive message
   socket.on("chatMessage", async ({ room, sender, receiver, senderName, text }) => {
     if (!room || !sender || !receiver || !text) return;
 
@@ -77,20 +90,21 @@ io.on("connection", (socket) => {
     });
 
     try {
-      const saved = await newMessage.save();
-      io.to(room).emit("chatMessage", saved);
+      const savedMessage = await newMessage.save();
+      io.to(room).emit("chatMessage", savedMessage);
     } catch (err) {
-      console.error("❌ Message save failed:", err);
+      console.error("❌ Message save failed:", err.message);
     }
   });
 
+  // Disconnect
   socket.on("disconnect", () => {
     console.log("❌ Client disconnected");
   });
 });
 
-// Start Server
+// Start server
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () =>
-  console.log(`🚀 Server running at http://localhost:${PORT}`)
-);
+server.listen(PORT, () => {
+  console.log(`🚀 Server running at http://localhost:${PORT}`);
+});
