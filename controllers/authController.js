@@ -9,10 +9,16 @@ const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString()
 // ✅ Signup Controller
 exports.signup = async (req, res) => {
   const { name, email, phone, password, role } = req.body;
+  const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+  
   try {
     const userExist = await User.findOne({ email });
     if (userExist) return res.status(400).json({ msg: "User already exists" });
 
+    if(!strongPasswordRegex.test(password)) {
+      return res.status(400).json({ msg: "Password must be at least 8 characters long, contain uppercase, lowercase, number, and special character." });
+    }
+    
     const hashed = await bcrypt.hash(password, 10);
     const otp = generateOTP();
 
