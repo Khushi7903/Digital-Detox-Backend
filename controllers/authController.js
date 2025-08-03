@@ -10,7 +10,7 @@ const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString()
 exports.signup = async (req, res) => {
   const { name, email, phone, password, role } = req.body;
   const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
-  
+
   try {
     const userExist = await User.findOne({ email });
     if (userExist) return res.status(400).json({ msg: "User already exists" });
@@ -35,6 +35,7 @@ exports.signup = async (req, res) => {
     await sendOtp(email, otp);
     res.status(200).json({ msg: "OTP sent to email", userId: user._id });
   } catch (err) {
+    console.error("Sign up error:", err);
     res.status(500).json({ msg: "Signup error", error: err.message });
   }
 };
