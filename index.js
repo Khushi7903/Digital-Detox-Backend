@@ -13,6 +13,8 @@ const authRoutes = require("./routes/authRoutes");
 const scoreRoutes = require("./routes/scoreRoutes");
 const contactRoute = require("./routes/contactRoute");
 const Message = require("./models/Message");
+const sendEmailRoute = require("./routes/sendEmail");
+const Mentor = require("./routes/mentorRoute");
 
 // Create Express app and HTTP server
 const app = express();
@@ -45,6 +47,8 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/score", scoreRoutes);
 app.use("/api", contactRoute);
+app.use("/api", sendEmailRoute);
+app.use("/api/mentors", Mentor);
 
 // Default Route
 app.get("/", (req, res) => {
