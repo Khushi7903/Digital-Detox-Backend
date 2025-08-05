@@ -33,16 +33,18 @@ const io = new Server(server, {
 });
 
 io.on("connection", (socket) => {
-  console.log("User connected: " + socket.id);
+  console.log("User connected");
 
   socket.on("send_message", (data) => {
-    io.emit("receive_message", data);
+    console.log("Message received:", data);
+    socket.broadcast.emit("receive_message", data); // send to others
   });
 
   socket.on("disconnect", () => {
-    console.log("User disconnected: " + socket.id);
+    console.log("User disconnected");
   });
 });
+
 
 // Middlewares
 app.use(cors({
