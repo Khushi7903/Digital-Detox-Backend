@@ -18,9 +18,9 @@ const Mentor = require("./routes/mentorRoute");
 
 // Create Express app and HTTP server
 const app = express();
-const server = http.createServer(app);
 
-// Configure Socket.IO
+
+const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: [
@@ -28,8 +28,20 @@ const io = new Server(server, {
       "https://surakshabuddyapp.vercel.app",
     ],
     methods: ["GET", "POST"],
-    credentials: true,
+    // credentials: true,
   },
+});
+
+io.on("connection", (socket) => {
+  console.log("User connected: " + socket.id);
+
+  socket.on("send_message", (data) => {
+    io.emit("receive_message", data);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected: " + socket.id);
+  });
 });
 
 // Middlewares
@@ -63,49 +75,6 @@ mongoose.connect(process.env.MONGO_URI, {
 .then(() => console.log("✅ MongoDB Connected"))
 .catch((err) => console.error("❌ MongoDB Error:", err.message));
 
-// Socket.IO Real-Time Chat Logic
-io.on("connection", (socket) => {
-  console.log("🔌 New client connected");
-
-  // Join room
-  socket.on("joinRoom", (room) => {
-    if (!room) return;
-    socket.join(room);
-
-    Message.find({ room })
-      .sort({ timestamp: 1 })
-      .then((messages) => {
-        socket.emit("chatHistory", messages);
-      })
-      .catch((err) => console.error("❌ Fetch chat history error:", err));
-  });
-
-  // Receive message
-  socket.on("chatMessage", async ({ room, sender, receiver, senderName, text }) => {
-    if (!room || !sender || !receiver || !text) return;
-
-    const newMessage = new Message({
-      room,
-      sender,
-      receiver,
-      senderName,
-      text,
-      timestamp: new Date(),
-    });
-
-    try {
-      const savedMessage = await newMessage.save();
-      io.to(room).emit("chatMessage", savedMessage);
-    } catch (err) {
-      console.error("❌ Message save failed:", err.message);
-    }
-  });
-
-  // Disconnect
-  socket.on("disconnect", () => {
-    console.log("❌ Client disconnected");
-  });
-});
 
 // Start server
 const PORT = process.env.PORT || 5000;
