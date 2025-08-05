@@ -47,5 +47,19 @@ router.post("/register", async (req, res) => {
   }
 });
 
+
+// Example: /api/mentors?userType=consultant
+router.get("/mentor", async (req, res) => {
+  const { userType } = req.query;
+  try {
+    const mentors = await Mentor.find(
+      userType ? { userType } : {}
+    ).select("fullName userType _id"); // Return only necessary fields
+    res.json(mentors);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching mentors." });
+  }
+});
+
 // ✅ Use CommonJS export
 module.exports = router;
