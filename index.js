@@ -14,7 +14,7 @@ const scoreRoutes = require("./routes/scoreRoutes");
 const contactRoute = require("./routes/contactRoute");
 const Message = require("./models/Message");
 const sendEmailRoute = require("./routes/sendEmail");
-const Mentor = require("./routes/mentorRoute");
+const Mentor = require("./routes/mentorRoutes");
 
 // Create Express app and HTTP server
 const app = express();
