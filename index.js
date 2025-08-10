@@ -38,6 +38,7 @@ app.use(cors({
   origin: [
     "http://localhost:3000",
     "https://surakshabuddyapp.vercel.app",
+    "https://www.surakshabuddy.com/"
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true,
