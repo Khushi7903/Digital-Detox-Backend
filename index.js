@@ -26,7 +26,7 @@ const io = new Server(server, {
     origin: [
       "http://localhost:3000",
       "https://surakshabuddyapp.vercel.app",
-      "https://www.surakshabuddy.com/"
+      "https://www.surakshabuddy.com"
     ],
     methods: ["GET", "POST"],
     credentials: true,
@@ -38,7 +38,7 @@ app.use(cors({
   origin: [
     "http://localhost:3000",
     "https://surakshabuddyapp.vercel.app",
-    "https://www.surakshabuddy.com/"
+    "https://www.surakshabuddy.com"
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true,
