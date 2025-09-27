@@ -51,8 +51,8 @@ router.post("/send-email", async (req, res) => {
   const { email, name, role } = req.body;
 
   const msg = {
-    to: email,
     from: `"Suraksha Buddy Team" <${process.env.EMAIL_USER}>`, // Verified sender in SendGrid
+    to: email,
     subject: "Thank You for Registering!",
     html: `
       <p>Dear ${name},</p>

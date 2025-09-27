@@ -34,8 +34,8 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY); // Your SendGrid API key in .env
 exports.sendOtp = async (email, otp) => {
   try {
     const msg = {
-      to: email,
       from: `"Suraksha Buddy" <${process.env.EMAIL_USER}>`, // Verified sender in SendGrid
+      to: email,
       subject: "Your OTP Code",
       html: `<h3>Your OTP is: <strong>${otp}</strong></h3>`,
     };
