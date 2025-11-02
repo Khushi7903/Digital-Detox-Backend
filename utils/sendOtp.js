@@ -29,21 +29,34 @@ const sgMail = require("@sendgrid/mail");
 const dotenv = require("dotenv");
 
 dotenv.config();
-sgMail.setApiKey(process.env.SENDGRID_API_KEY); // Your SendGrid API key in .env
+
+// Set your SendGrid API Key
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 exports.sendOtp = async (email, otp) => {
   try {
     const msg = {
-      from: `"Suraksha Buddy" <${process.env.EMAIL_USER}>`, // Verified sender in SendGrid
-      to: email,
-      subject: "Your OTP Code",
-      html: `<h3>Your OTP is: <strong>${otp}</strong></h3>`,
+      to: email, // Receiver
+      from: {
+        email: process.env.SENDGRID_VERIFIED_EMAIL, // Must be verified on SendGrid
+        name: "Suraksha Buddy",
+      },
+      subject: "Your OTP Code - Suraksha Buddy",
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+          <h2>Suraksha Buddy</h2>
+          <p>Your One-Time Password (OTP) is:</p>
+          <h3 style="color: #007bff;">${otp}</h3>
+          <p>This OTP will expire in 10 minutes.</p>
+        </div>
+      `,
     };
 
     await sgMail.send(msg);
-    console.log("✅ OTP sent to:", email);
+    console.log("✅ OTP sent successfully to:", email);
   } catch (err) {
-    console.error("❌ sendOtp error:", err.response ? err.response.body : err.message);
+    console.error("❌ sendOtp error:", err.response?.body?.errors || err.message);
     throw err;
   }
 };
+
