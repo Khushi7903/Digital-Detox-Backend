@@ -201,3 +201,36 @@ exports.googleLogin = async (req, res) => {
     res.status(500).json({ msg: "Google login failed" });
   }
 };
+
+
+// Get user profile
+exports.getUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password -otp -resetOtp -resetOtpExpires");
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
+// Update user profile
+exports.updateUserProfile = async (req, res) => {
+  try {
+    const updates = req.body;
+
+    // Prevent email modification for safety
+    delete updates.email;
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { $set: updates },
+      { new: true, runValidators: true }
+    ).select("-password -otp -resetOtp -resetOtpExpires");
+
+    res.json({ message: "Profile updated successfully", user });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to update profile", error: err.message });
+  }
+};
