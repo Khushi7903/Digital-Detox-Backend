@@ -3,10 +3,10 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { sendOtp } = require("../utils/sendOtp");
 
-// Generate 6-digit OTP
+// 6-digit OTP
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
-// ✅ Signup Controller
+// Signup 
 exports.signup = async (req, res) => {
   const { name, email, phone, password, role } = req.body;
   const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
@@ -40,7 +40,7 @@ exports.signup = async (req, res) => {
   }
 };
 
-// ✅ Verify Signup OTP
+// Signup OTP
 exports.verifyOTP = async (req, res) => {
   const { userId, otp } = req.body;
   try {
@@ -60,7 +60,7 @@ exports.verifyOTP = async (req, res) => {
   }
 };
 
-// ✅ Login Controller
+// Login 
 exports.login = async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -82,7 +82,7 @@ exports.login = async (req, res) => {
   }
 };
 
-// ✅ Verify Login OTP
+// Verify Login OTP
 exports.verifyLoginOtp = async (req, res) => {
   const { userId, otp } = req.body;
   try {
