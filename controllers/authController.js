@@ -3,7 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { sendOtp } = require("../utils/sendOtp");
 const { OAuth2Client } = require("google-auth-library");
-
+const cloudinary = require("../utils/cloudinary");
 
 // 6-digit OTP
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
@@ -215,13 +215,23 @@ exports.getUserProfile = async (req, res) => {
   }
 };
 
-// Update user profile
+
+// Update user profile with Cloudinary image upload
 exports.updateUserProfile = async (req, res) => {
   try {
     const updates = req.body;
+    delete updates.email; // prevent email change
 
-    // Prevent email modification for safety
-    delete updates.email;
+    // If a new file is uploaded
+    if (req.file) {
+      // Upload image to Cloudinary
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "surakshaBuddyProfiles",
+        resource_type: "image",
+      });
+
+      updates.profilePic = result.secure_url;
+    }
 
     const user = await User.findByIdAndUpdate(
       req.user.id,
@@ -229,8 +239,13 @@ exports.updateUserProfile = async (req, res) => {
       { new: true, runValidators: true }
     ).select("-password -otp -resetOtp -resetOtpExpires");
 
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
     res.json({ message: "Profile updated successfully", user });
   } catch (err) {
+    console.error("Profile update error:", err);
     res.status(500).json({ message: "Failed to update profile", error: err.message });
   }
 };

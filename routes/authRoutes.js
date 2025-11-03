@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const authController = require("../controllers/authController");
 const authMiddleware = require("../middleware/authMiddleware");
+const upload = require("../middleware/upload");
 
 router.post("/signup", authController.signup);
 router.post("/verify-otp", authController.verifyOTP);
@@ -13,6 +14,6 @@ router.post("/google", authController.googleLogin);
 
 router.get("/profile", authMiddleware, authController.getUserProfile);
 
-router.put("/profile", authMiddleware, authController.updateUserProfile);
+router.put("/profile", authMiddleware, upload.single("profilePic"), authController.updateUserProfile);
 
 module.exports = router;
