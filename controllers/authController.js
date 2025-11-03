@@ -2,6 +2,8 @@ const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { sendOtp } = require("../utils/sendOtp");
+const { OAuth2Client } = require("google-auth-library");
+
 
 // 6-digit OTP
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
@@ -145,5 +147,57 @@ exports.resetPassword = async (req, res) => {
   } catch (err) {
     console.error("Reset password error:", err);
     res.status(500).json({ msg: "Server error" });
+  }
+};
+
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+// Google Auth Login
+exports.googleLogin = async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    // Verify token from Google
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name, picture } = payload;
+
+    let user = await User.findOne({ email });
+
+    // If user doesn't exist, create a new one
+    if (!user) {
+      user = await User.create({
+        name,
+        email,
+        password: null,
+        role: "student", // or infer from UI
+        googleAuth: true,
+        profilePic: picture,
+      });
+    }
+
+    // Generate JWT
+    const authToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
+
+    res.json({
+      msg: "Google login successful",
+      token: authToken,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        picture: user.profilePic,
+      },
+    });
+  } catch (err) {
+    console.error("Google login error:", err);
+    res.status(500).json({ msg: "Google login failed" });
   }
 };
