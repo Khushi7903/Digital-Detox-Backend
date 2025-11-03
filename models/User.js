@@ -18,6 +18,17 @@ const userSchema = new mongoose.Schema({
   otp: String,
   otpExpiry: Date,
   verified: { type: Boolean, default: false },
+  resetOtp: String,
+  resetOtpExpires: Date,
+  newPassword: {
+    type: String,
+    validate: {
+      validator: function (v) {
+        return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/.test(v);
+      },
+      message: "Password must be at least 8 characters long, contain uppercase, lowercase",
+    },
+  },
 });
 
 module.exports = mongoose.model("User", userSchema);

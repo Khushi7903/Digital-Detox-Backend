@@ -101,3 +101,49 @@ exports.verifyLoginOtp = async (req, res) => {
     res.status(500).json({ msg: "OTP login error", error: err.message });
   }
 };
+
+// ---------------- FORGOT PASSWORD (Send OTP via SendGrid) ----------------
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ msg: "User not found" });
+
+    const otp = generateOTP();
+    user.resetOtp = otp;
+    user.resetOtpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+    await user.save();
+
+    // ✅ Send password reset OTP via SendGrid
+    await sendOtp(email, otp);
+
+    res.status(200).json({ msg: "Password reset OTP sent to your email." });
+  } catch (err) {
+    console.error("Forgot password error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+// ---------------- RESET PASSWORD ----------------
+exports.resetPassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ msg: "User not found" });
+
+    if (user.resetOtp !== otp || user.resetOtpExpires < Date.now()) {
+      return res.status(400).json({ msg: "Invalid or expired OTP" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    user.resetOtp = null;
+    user.resetOtpExpires = null;
+    await user.save();
+
+    res.status(200).json({ msg: "Password reset successful." });
+  } catch (err) {
+    console.error("Reset password error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
